@@ -25,6 +25,13 @@ ALTER TABLE KETQUATHI ADD CONSTRAINT CHK_KQUA CHECK (
   AND KQUA = 'Khong dat'
 );
 
+-- ALTER TABLE KETQUATHI ADD CONSTRAINT CHK_KQUA CHECK (
+--   KQUA = CASE
+--     WHEN DIEM BETWEEN 5 AND 10  THEN 'Dat'
+--     ELSE 'Khong dat'
+--   END
+-- );
+-- 
 -- 6. Học viên thi một môn tối đa 3 lần.
 ALTER TABLE KETQUATHI ADD CONSTRAINT CHK_LANTHI CHECK (LANTHI BETWEEN 1 AND 3);
 
@@ -69,3 +76,59 @@ ALTER TABLE MONHOC ADD CONSTRAINT CHK_TCLT_TCTH CHECK (ABS(TCLT - TCTH) <= 3);
 -- )
 --
 -- 17. Sỉ số của một lớp bằng với số lượng học viên thuộc lớp đó.
+--
+--
+-- 18. Trong quan hệ DIEUKIEN giá trị của thuộc tính MAMH và MAMH_TRUOC trong cùng một bộ không được giống nhau (“A”,”A”) và cũng không tồn tại hai bộ (“A”,”B”) và (“B”,”A”).
+--
+--
+-- 19. Tăng hệ số lương thêm 0.2 cho những giáo viên là trưởng khoa
+UPDATE GIAOVIEN
+SET
+  MUCLUONG = MUCLUONG * 1.2;
+
+-- 20. Cập nhật giá trị điểm trung bình tất cả các môn học (DIEMTB) của mỗi học viên (tất cả các môn học đều có hệ số 1 và nếu học viên thi một môn nhiều lần, chỉ lấy điểm của lần thi sau cùng).
+-- not done
+SELECT
+  MAHV,
+  MAMH,
+  MAX(DIEM)
+FROM
+  KETQUATHI
+ORDER BY
+  NGTHI DESC;
+
+WITH
+  HOCVIEN_KETQUATHI AS (
+    SELECT
+      MAHV,
+      MAX(DIEMTB) AS DIEMTB_MAX
+    FROM
+      (
+        SELECT
+          MAHV,
+          DIEMTB
+        FROM
+          -- (SELECT MAHV, DIEMTB FROM  KETQUATHI GROUP BY MAHV, MAMH)
+        ORDER BY
+          DIEM DESC
+      )
+    GROUP BY
+      MAHV
+  )
+UPDATE HOCVIEN
+SET
+  DIEMTB = HOCVIEN_KETQUATHI.DIEMTB_MAX;
+
+-- 21. Cập nhật giá trị cho cột GHICHU là “Cam thi” đối với trường hợp: học viên có một môn bất kỳ thi lần thứ 3 dưới 5 điểm.
+UPDATE HOCVIEN
+SET
+  GHICHU = "Cam thi"
+FROM
+  HOCVIEN,
+  KETQUATHI
+WHERE
+  (
+    HOCVIEN.MAHV = KETQUATHI.MAHV
+    AND KETQUATHI.LANTHI = 3
+    AND KETQUATHI.DIEM < 5
+  );
