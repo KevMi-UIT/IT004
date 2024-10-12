@@ -88,41 +88,41 @@ SET
 
 -- 20. Cập nhật giá trị điểm trung bình tất cả các môn học (DIEMTB) của mỗi học viên (tất cả các môn học đều có hệ số 1 và nếu học viên thi một môn nhiều lần, chỉ lấy điểm của lần thi sau cùng).
 -- not done
-SELECT
-  MAHV,
-  MAMH,
-  MAX(DIEM)
-FROM
-  KETQUATHI
-ORDER BY
-  NGTHI DESC;
-
-WITH
-  HOCVIEN_KETQUATHI AS (
-    SELECT
-      MAHV,
-      MAX(DIEMTB) AS DIEMTB_MAX
-    FROM
-      (
-        SELECT
-          MAHV,
-          DIEMTB
-        FROM
-          -- (SELECT MAHV, DIEMTB FROM  KETQUATHI GROUP BY MAHV, MAMH)
-        ORDER BY
-          DIEM DESC
-      )
-    GROUP BY
-      MAHV
-  )
-UPDATE HOCVIEN
-SET
-  DIEMTB = HOCVIEN_KETQUATHI.DIEMTB_MAX;
-
+-- SELECT
+--   MAHV,
+--   MAMH,
+--   MAX(DIEM)
+-- FROM
+--   KETQUATHI
+-- ORDER BY
+--   NGTHI DESC;
+--
+-- WITH
+--   HOCVIEN_KETQUATHI AS (
+--     SELECT
+--       MAHV,
+--       MAX(DIEMTB) AS DIEMTB_MAX
+--     FROM
+--       (
+--         SELECT
+--           MAHV,
+--           DIEMTB
+--         FROM
+--           -- (SELECT MAHV, DIEMTB FROM  KETQUATHI GROUP BY MAHV, MAMH)
+--         ORDER BY
+--           DIEM DESC
+--       )
+--     GROUP BY
+--       MAHV
+--   )
+-- UPDATE HOCVIEN
+-- SET
+--   DIEMTB = HOCVIEN_KETQUATHI.DIEMTB_MAX;
+--
 -- 21. Cập nhật giá trị cho cột GHICHU là “Cam thi” đối với trường hợp: học viên có một môn bất kỳ thi lần thứ 3 dưới 5 điểm.
 UPDATE HOCVIEN
 SET
-  GHICHU = "Cam thi"
+  GHICHU = 'Cam thi'
 FROM
   HOCVIEN,
   KETQUATHI
@@ -132,3 +132,111 @@ WHERE
     AND KETQUATHI.LANTHI = 3
     AND KETQUATHI.DIEM < 5
   );
+
+-- 22. Cập nhật giá trị cho cột XEPLOAI trong quan hệ HOCVIEN như sau:
+--   a. Nếu DIEMTB ≥ 9 thì XEPLOAI = “XS”
+--   b. Nếu 8 ≤ DIEMTB < 9 thì XEPLOAI = “G”
+--   c. Nếu 6.5 ≤ DIEMTB < 8 thì XEPLOAI = “K”
+--   d. Nếu 5 ≤ DIEMTB < 6.5 thì XEPLOAI = “TB”
+--   e. Nếu DIEMTB < 5 thì XEPLOAI = “Y”
+UPDATE HOCVIEN
+SET
+  XEPLOAI = CASE
+    WHEN DIEMTB >= 9 THEN 'XS'
+    WHEN DIEMTB >= 8 THEN 'G'
+    WHEN DIEMTB >= 6.5 THEN 'K'
+    WHEN DIEMTB >= 5 THEN 'TB'
+    ELSE 'y'
+  END;
+
+-- 23. In ra danh sách (mã học viên, họ tên, ngày sinh, mã lớp) lớp trưởng của các lớp.
+SELECT DISTINCT
+  MAHV,
+  HOTEN = HO + ' ' + TEN,
+  NGSINH,
+  LOP.MALOP
+FROM
+  HOCVIEN
+  INNER JOIN LOP on HOCVIEN.MAHV = LOP.TRGLOP;
+
+-- 24. In ra bảng điểm khi thi (mã học viên, họ tên , lần thi, điểm số) môn CTRR của lớp “K12”, sắp xếp theo tên, họ học viên.
+SELECT DISTINCT
+  HOCVIEN.MAHV,
+  HOTEN = HO + ' ' + TEN,
+  LANTHI,
+  DIEM
+FROM
+  HOCVIEN
+  INNER JOIN KETQUATHI ON HOCVIEN.MAHV = KETQUATHI.MAHV
+WHERE
+  MAMH = 'CTRR';
+
+-- 25. In ra danh sách những học viên (mã học viên, họ tên) và những môn học mà học viên đó thi lần thứ nhất đã đạt.
+SELECT DISTINCT
+  HOCVIEN.MAHV,
+  HOTEN = HO + ' ' + TEN,
+  MAMH
+FROM
+  HOCVIEN
+  INNER JOIN KETQUATHI ON HOCVIEN.MAHV = KETQUATHI.MAHV
+WHERE
+  LANTHI = 1
+  AND KQUA = 'Dat';
+
+-- 26. In ra danh sách học viên (mã học viên, họ tên) của lớp “K11” thi môn CTRR không đạt (ở lần thi 1)
+SELECT DISTINCT
+  HOCVIEN.MAHV,
+  HOTEN = HO + ' ' + TEN
+FROM
+  HOCVIEN
+  INNER JOIN KETQUATHI ON HOCVIEN.MAHV = KETQUATHI.MAHV
+WHERE
+  MAMH = 'CTRR'
+  AND LANTHI = 1
+  AND KQUA = 'Khong Dat';
+
+-- 27. Tìm tên những môn học mà giáo viên có tên “Tran Tam Thanh” dạy trong học kỳ 1 năm 2006.
+WITH
+  GIAOVIEN_TTT AS (
+    SELECT
+      MAGV
+    FROM
+      GIAOVIEN
+    WHERE
+      HOTEN = 'Tran Tam Thanh'
+  )
+SELECT DISTINCT
+  MAMH
+FROM
+  GIANGDAY
+  INNER JOIN GIAOVIEN_TTT ON GIANGDAY.MAGV = GIAOVIEN_TTT.MAGV
+WHERE
+  HOCKY = 1
+  AND YEAR (TUNGAY) = 2006;
+
+-- 28. Tìm những môn học (mã môn học, tên môn học) mà giáo viên chủ nhiệm lớp “K11” dạy trong học kỳ 1 năm 2006.
+WITH
+  GIAOVIEN_CN AS (
+    SELECT
+      MAGVCN
+    FROM
+      LOP
+    WHERE
+      MALOP = 'K11'
+  )
+SELECT DISTINCT
+  MAMH
+FROM
+  GIANGDAY
+  INNER JOIN GIAOVIEN_CN ON GIANGDAY.MAGV = GIAOVIEN_CN.MAGVCN
+WHERE
+  HOCKY = 1
+  AND YEAR (TUNGAY) = 2006;
+
+-- 29.Tìm họ tên lớp trưởng của các lớp mà giáo viên có tên “Nguyen To Lan” dạy môn “Co So Du Lieu”.
+-- 30.In ra danh sách những môn học (mã môn học, tên môn học) phải học liền trước môn “Co So Du Lieu”.
+-- 31.Tìm họ tên giáo viên dạy môn CTRR cho cả hai lớp “K11” và “K12” trong cùng học kỳ 1 năm 2006 In ra danh sách các khách hàng (MAKH, HOTEN)
+-- đã mua hàng trong ngày 1/1/2007.
+-- 32.In ra số hóa đơn, trị giá các hóa đơn do nhân viên có tên “Nguyen Van B” lập trong ngày 28/10/2006.
+-- 33.In ra danh sách các sản phẩm (MASP,TENSP) được khách hàng có tên “Nguyen Van A” mua trong tháng 10/2006.
+-- 34.Tìm các số hóa đơn đã mua sản phẩm có mã số “BB01” hoặc “BB02”.
