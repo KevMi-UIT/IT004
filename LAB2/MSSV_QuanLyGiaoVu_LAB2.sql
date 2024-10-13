@@ -234,7 +234,35 @@ WHERE
   AND YEAR (TUNGAY) = 2006;
 
 -- 29.Tìm họ tên lớp trưởng của các lớp mà giáo viên có tên “Nguyen To Lan” dạy môn “Co So Du Lieu”.
+SELECT DISTINCT
+  HOTEN = HOCVIEN.HO + ' ' + HOCVIEN.TEN
+FROM
+  GIANGDAY
+  INNER JOIN GIAOVIEN ON GIANGDAY.MAGV = GIAOVIEN.MAGV
+  INNER JOIN MONHOC ON GIANGDAY.MAMH = MONHOC.MAMH
+  INNER JOIN LOP ON GIANGDAY.MALOP = LOP.MALOP
+  INNER JOIN HOCVIEN ON LOP.TRGLOP = HOCVIEN.MAHV
+WHERE
+  GIAOVIEN.HOTEN = 'Nguyen To Lan'
+  AND MONHOC.TENMH = 'Co so du lieu';
+
 -- 30.In ra danh sách những môn học (mã môn học, tên môn học) phải học liền trước môn “Co So Du Lieu”.
+WITH
+  DS_MAMH_TRUOC AS (
+    SELECT
+      MAMH_TRUOC
+    FROM
+      MONHOC
+      INNER JOIN DIEUKIEN ON MONHOC.MAMH = DIEUKIEN.MAMH
+    WHERE
+      TENMH = 'Co so du lieu'
+  )
+SELECT
+  TENMH
+FROM
+  DS_MAMH_TRUOC
+  INNER JOIN MONHOC ON DS_MAMH_TRUOC.MAMH_TRUOC = MONHOC.MAMH;
+
 -- 31.Tìm họ tên giáo viên dạy môn CTRR cho cả hai lớp “K11” và “K12” trong cùng học kỳ 1 năm 2006 In ra danh sách các khách hàng (MAKH, HOTEN)
 -- đã mua hàng trong ngày 1/1/2007.
 -- 32.In ra số hóa đơn, trị giá các hóa đơn do nhân viên có tên “Nguyen Van B” lập trong ngày 28/10/2006.
