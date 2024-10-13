@@ -257,14 +257,50 @@ WITH
     WHERE
       TENMH = 'Co so du lieu'
   )
-SELECT
+SELECT DISTINCT
   TENMH
 FROM
   DS_MAMH_TRUOC
   INNER JOIN MONHOC ON DS_MAMH_TRUOC.MAMH_TRUOC = MONHOC.MAMH;
 
--- 31.Tìm họ tên giáo viên dạy môn CTRR cho cả hai lớp “K11” và “K12” trong cùng học kỳ 1 năm 2006 In ra danh sách các khách hàng (MAKH, HOTEN)
--- đã mua hàng trong ngày 1/1/2007.
--- 32.In ra số hóa đơn, trị giá các hóa đơn do nhân viên có tên “Nguyen Van B” lập trong ngày 28/10/2006.
--- 33.In ra danh sách các sản phẩm (MASP,TENSP) được khách hàng có tên “Nguyen Van A” mua trong tháng 10/2006.
--- 34.Tìm các số hóa đơn đã mua sản phẩm có mã số “BB01” hoặc “BB02”.
+-- 31.Tìm họ tên giáo viên dạy môn CTRR cho cả hai lớp “K11” và “K12” trong cùng học kỳ 1 năm 2006.
+WITH
+  LOP_K11_K12 AS (
+    SELECT
+      MALOP
+    FROM
+      LOP
+    WHERE
+      MALOP = 'K11'
+      OR MALOP = 'K12'
+  ),
+  GV_CTRR AS (
+    SELECT
+      MALOP,
+      HOTEN
+    FROM
+      GIANGDAY
+      INNER JOIN GIAOVIEN ON GIANGDAY.MAGV = GIAOVIEN.MAGV
+    WHERE
+      MAMH = 'CTRR'
+  )
+SELECT DISTINCT
+  HOTEN
+FROM
+  GV_CTRR AS GV_CTRR_1
+WHERE
+  NOT EXISTS (
+    SELECT
+      MALOP
+    FROM
+      LOP_K11_K12
+    EXCEPT
+    (
+      SELECT
+        MALOP
+      FROM
+        GV_CTRR AS GV_CTRR_2
+      WHERE
+        GV_CTRR_1.HOTEN = GV_CTRR_2.HOTEN
+    )
+  );
