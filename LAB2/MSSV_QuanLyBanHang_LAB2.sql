@@ -5,18 +5,15 @@ ALTER TABLE SANPHAM ADD GHICHU VARCHAR(20);
 ALTER TABLE KHACHHANG ADD LOAIKH TINYINT;
 
 -- 3. Sửa kiểu dữ liệu của thuộc tính GHICHU trong quan hệ SANPHAM thành VARCHAR(100)
-ALTER TABLE SANPHAM;
-
+ALTER TABLE SANPHAM
 ALTER COLUMN GHICHU VARCHAR(100);
 
 -- 4. Xóa thuộc tính GHICHU trong quan hệ SANPHAM.
-ALTER TABLE SANPHAM;
-
+ALTER TABLE SANPHAM
 DROP COLUMN GHICHU;
 
 -- 5. Làm thế nào để thuộc tính LOAIKH trong quan hệ KHACHHANG có thể lưu các giá trị là: “Vang lai”, “Thuong xuyen”, “Vip”, …
-ALTER TABLE KHACHHANG;
-
+ALTER TABLE KHACHHANG
 ALTER COLUMN LOAIKH NVARCHAR (10);
 
 -- 6. Đơn vị tính của sản phẩm chỉ có thể là (“cay”, ”hop”, ”cai”, ”quyen”, ”chuc”)
@@ -49,11 +46,6 @@ FROM
   KHACHHANG;
 
 -- 10. Cập nhật giá tăng 5% đối với những sản phẩm do “Thai Lan” sản xuất (cho quan hệ SANPHAM1)
-SELECT
-  *
-FROM
-  SANPHAM1;
-
 UPDATE SANPHAM1
 SET
   GIA = GIA * 1.05
@@ -61,13 +53,6 @@ WHERE
   NUOCSX = 'Thai Lan';
 
 -- 11. Cập nhật giá giảm 5% đối với những sản phẩm do “Trung Quoc” sản xuất có giá từ 10.000 trở xuống (cho quan hệ SANPHAM1).
-SELECT
-  *
-FROM
-  SANPHAM1
-WHERE
-  NUOCSX = 'Trung Quoc';
-
 UPDATE SANPHAM1
 SET
   GIA = GIA * 0.95
@@ -76,20 +61,6 @@ WHERE
   AND GIA < 10000;
 
 -- 12. Cập nhật giá trị LOAIKH là “Vip” đối với những khách hàng đăng ký thành viên trước ngày 1/1/2007 có doanh số từ 10.000.000 trở lên hoặc khách hàng đăng ký thành viên từ 1/1/2007 trở về sau có doanh số từ 2.000.000 trở lên (cho quan hệ KHACHHANG1)
-SELECT
-  *
-FROM
-  KHACHHANG1
-WHERE
-  (
-    DATEDIFF (DAY, NGDK, '1/1/2007') > 0
-    AND DOANHSO >= 10000000
-  )
-  OR (
-    DATEDIFF (DAY, NGDK, '1/1/2007') <= 0
-    AND DOANHSO >= 2000000
-  );
-
 UPDATE KHACHHANG1
 SET
   LOAIKH = 'Vip'
@@ -113,8 +84,6 @@ WHERE
   NUOCSX = 'Trung Quoc';
 
 -- 14. In ra danh sách các sản phẩm (MASP, TENSP) có đơn vị tính là “cay”, ”quyen”
---CACH 1:
---CACH 2:
 SELECT
   MASP,
   TENSP
@@ -129,22 +98,12 @@ WHERE
 SELECT
   *
 FROM
-  SANPHAM;
-
-SELECT
-  *
-FROM
   SANPHAM
 WHERE
   MASP LIKE 'B%'
   AND MASP LIKE '%01';
 
 -- 16. In ra danh sách các sản phẩm (MASP,TENSP) do “Trung Quốc” sản xuất có giá từ 30.000 đến 40.000.
-SELECT
-  *
-FROM
-  SANPHAM;
-
 -- CACH 1
 SELECT
   *
@@ -168,22 +127,12 @@ WHERE
 SELECT
   *
 FROM
-  SANPHAM;
-
-SELECT
-  *
-FROM
   SANPHAM
 WHERE
   NUOCSX IN ('Trung Quoc', 'Thai Lan')
   AND (GIA BETWEEN 30000 AND 40000);
 
 -- 18. In ra các số hóa đơn, trị giá hóa đơn bán ra trong ngày 1/1/2007 và ngày 2/1/2007.
-SELECT
-  *
-FROM
-  HOADON;
-
 -- CACH 1
 SET
   DATEFORMAT DMY
@@ -198,6 +147,8 @@ WHERE
 -- NGAY HOA DON SAU 1/1/2007 VA TRUOC NGAY 2/1/2007
 -- 19. In ra các số hóa đơn, trị giá hóa đơn trong tháng 1/2007, sắp xếp theo ngày (tăng dần) và trị giá của hóa đơn (giảm dần).
 --CACH 1
+SET
+  DATEFORMAT DMY
 SELECT
   SOHD,
   TRIGIA
@@ -211,6 +162,8 @@ ORDER BY
   TRIGIA DESC;
 
 -- CACH 2
+SET
+  DATEFORMAT DMY
 SELECT
   SOHD,
   TRIGIA
@@ -224,16 +177,6 @@ ORDER BY
   TRIGIA DESC;
 
 -- 20. In ra danh sách các khách hàng (MAKH, HOTEN) đã mua hàng trong ngày 1/1/2007.
-SELECT
-  *
-FROM
-  KHACHHANG;
-
-SELECT
-  *
-FROM
-  HOADON;
-
 SELECT
   *
 FROM
@@ -259,25 +202,21 @@ WHERE
   AND NV.HOTEN = 'Nguyen Van B';
 
 -- 22. In ra danh sách các sản phẩm (MASP,TENSP) được khách hàng có tên “Nguyen Van A” mua trong tháng 10/2006.
+-- CACH 1
 SELECT
   *
 FROM
-  CTHD;
-
-SELECT
-  *
-FROM
-  KHACHHANG;
-
-SELECT
-  *
-FROM
-  SANPHAM;
-
-SELECT
-  *
-FROM
-  HOADON;
+  SANPHAM SP,
+  HOADON HD,
+  CTHD CT,
+  KHACHHANG KH
+WHERE
+  SP.MASP = CT.MASP
+  AND HD.SOHD = CT.SOHD
+  AND HD.MAKH = KH.MAKH
+  AND KH.HOTEN = 'Nguyen Van A'
+  AND MONTH (HD.NGHD) = '10'
+  AND YEAR (HD.NGHD) = '2006';
 
 -- CACH 2
 SELECT
@@ -304,29 +243,7 @@ WHERE
   AND MONTH (HDCT.NGHD) = '10'
   AND YEAR (HDCT.NGHD) = '2006';
 
--- CACH 1
-SELECT
-  *
-FROM
-  SANPHAM SP,
-  HOADON HD,
-  CTHD CT,
-  KHACHHANG KH
-WHERE
-  SP.MASP = CT.MASP
-  AND HD.SOHD = CT.SOHD
-  AND HD.MAKH = KH.MAKH
-  AND KH.HOTEN = 'Nguyen Van A'
-  AND MONTH (HD.NGHD) = '10'
-  AND YEAR (HD.NGHD) = '2006';
-
 -- 23. Tìm các số hóa đơn đã mua sản phẩm có mã số “BB01” hoặc “BB02”.
-SELECT
-  *
-FROM
-  HOADON;
-
--- CACH 1
 SELECT
   *
 FROM
@@ -337,10 +254,3 @@ WHERE
   HD.SOHD = CT.SOHD
   AND CT.MASP = SP.MASP
   AND SP.MASP IN ('BB01', 'BB02');
-
--- CACH 2
-/*SELECT *
-FROM HOADON HD, CTHD CT
-WHERE
-*/
-

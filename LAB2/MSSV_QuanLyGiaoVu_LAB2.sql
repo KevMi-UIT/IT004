@@ -6,7 +6,10 @@ ALTER TABLE HOCVIEN ADD DIEMTB TINYINT;
 ALTER TABLE HOCVIEN ADD XEPLOAI CHAR(2);
 
 -- 2. Mã học viên là một chuỗi 5 ký tự, 3 ký tự đầu là mã lớp, 2 ký tự cuối cùng là số thứ tự học viên trong lớp. VD: “K1101”
+-- CACH 1:
 -- ALTER TABLE HOCVIEN ADD CONSTRAINT CHK_MAHV CHECK (MAHV LIKE MALOP + '%');
+--
+-- CACH 2:
 ALTER TABLE HOCVIEN ADD CONSTRAINT CHK_MAHV CHECK (LEFT (MAHV, 3) = MALOP);
 
 -- 3. Thuộc tính GIOITINH chỉ có giá trị là “Nam” hoặc “Nu”.
@@ -44,8 +47,18 @@ ALTER TABLE GIANGDAY ADD CONSTRAINT CHK_HOCKY CHECK (HOCKY BETWEEN 1 AND 3);
 ALTER TABLE GIAOVIEN ADD CONSTRAINT CHK_HOCVI CHECK (HOCVI IN ('CN', 'KS', 'Ths', 'TS', 'PTS'));
 
 -- 9. Lớp trưởng của một lớp phải là học viên của lớp đó.
---
---
+ALTER TABLE LOP ADD CONSTRAINT CHK_LOPTRUONG CHECK (
+  EXISTS (
+    SELECT
+      *
+    FROM
+      HOCVIEN
+    WHERE
+      LOP.MALOP = HOCVIEN.MALOP
+      AND LOP.TRGLOP = HOCVIEN.MAHV
+  )
+);
+
 -- 10. Trưởng khoa phải là giáo viên thuộc khoa và có học vị “TS” hoặc “PTS”.
 --
 --
@@ -69,13 +82,7 @@ ALTER TABLE MONHOC ADD CONSTRAINT CHK_TCLT_TCTH CHECK (ABS(TCLT - TCTH) <= 3);
 --
 --
 -- 16. Mỗi học kỳ của một năm học, một lớp chỉ được học tối đa 3 môn.
--- ALTER TABLE GIANGDAY ADD CONSTRAINT CHK_SO_LAN_HOC (
---   (
---     COUNT(*)
---     GROUP BY
---       (MALOP, YEAR (TUNGAY), HOCKY)
---   ) <= 3
--- )
+--
 --
 -- 17. Sỉ số của một lớp bằng với số lượng học viên thuộc lớp đó.
 --
@@ -89,37 +96,7 @@ SET
   MUCLUONG = MUCLUONG * 1.2;
 
 -- 20. Cập nhật giá trị điểm trung bình tất cả các môn học (DIEMTB) của mỗi học viên (tất cả các môn học đều có hệ số 1 và nếu học viên thi một môn nhiều lần, chỉ lấy điểm của lần thi sau cùng).
--- not done
--- SELECT
---   MAHV,
---   MAMH,
---   MAX(DIEM)
--- FROM
---   KETQUATHI
--- ORDER BY
---   NGTHI DESC;
 --
--- WITH
---   HOCVIEN_KETQUATHI AS (
---     SELECT
---       MAHV,
---       MAX(DIEMTB) AS DIEMTB_MAX
---     FROM
---       (
---         SELECT
---           MAHV,
---           DIEMTB
---         FROM
---           -- (SELECT MAHV, DIEMTB FROM  KETQUATHI GROUP BY MAHV, MAMH)
---         ORDER BY
---           DIEM DESC
---       )
---     GROUP BY
---       MAHV
---   )
--- UPDATE HOCVIEN
--- SET
---   DIEMTB = HOCVIEN_KETQUATHI.DIEMTB_MAX;
 --
 -- 21. Cập nhật giá trị cho cột GHICHU là “Cam thi” đối với trường hợp: học viên có một môn bất kỳ thi lần thứ 3 dưới 5 điểm.
 UPDATE HOCVIEN
