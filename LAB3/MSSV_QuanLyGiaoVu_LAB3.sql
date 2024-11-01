@@ -113,10 +113,196 @@ WHERE
   );
 
 -- 25. * Tìm họ tên những LOPTRG thi không đạt quá 3 môn (mỗi môn đều thi không đạt ở tất cả các lần thi).
+WITH
+  FINALKQ AS (
+    SELECT
+      MAHV,
+      MAMH,
+      MAX(LANTHI) AS LANTHICUOI,
+      KQUA
+    FROM
+      KETQUATHI
+    GROUP BY
+      MAHV,
+      MAMH,
+      KQUA
+  ),
+  DSLOPTRG AS (
+    SELECT
+      MAHV,
+      HO,
+      TEN
+    FROM
+      LOP
+      INNER JOIN HOCVIEN ON LOP.TRGLOP = HOCVIEN.MAHV
+  )
+SELECT
+  HO,
+  TEN
+FROM
+  FINALKQ
+  INNER JOIN DSLOPTRG ON FINALKQ.MAHV = DSLOPTRG.MAHV
+WHERE
+  KQUA = 'Khong Dat'
+GROUP BY
+  HO,
+  TEN
+HAVING
+  COUNT(MAMH) > 3;
+
 -- 26. Tìm học viên (mã học viên, họ tên) có số môn đạt điểm 9, 10 nhiều nhất.
+WITH
+  DSHV910 AS (
+    SELECT
+      *
+    FROM
+      KETQUATHI
+    WHERE
+      DIEM BETWEEN 9 AND 10
+  )
+SELECT
+  TOP (1)
+WITH
+  TIES HOCVIEN.MAHV,
+  HOCVIEN.HO + HOCVIEN.TEN AS HOTEN,
+  COUNT(MAMH) AS SODIEM910
+FROM
+  DSHV910
+  INNER JOIN HOCVIEN ON DSHV910.MAHV = HOCVIEN.MAHV
+GROUP BY
+  HOCVIEN.MAHV
+ORDER BY
+  SODIEM910 DESC;
+
 -- 27. Trong từng lớp, tìm học viên (mã học viên, họ tên) có số môn đạt điểm 9, 10 nhiều nhất.
+WITH
+  DSHV910 AS (
+    SELECT
+      *
+    FROM
+      KETQUATHI
+    WHERE
+      DIEM BETWEEN 9 AND 10
+  ),
+  COUNT910_LOP AS (
+    SELECT
+      HOCVIEN.MALOP,
+      HOCVIEN.MAHV,
+      HOCVIEN.HO,
+      HOCVIEN.TEN,
+      COUNT(MAMH) AS SODIEM910
+    FROM
+      DSHV910
+      INNER JOIN HOCVIEN ON DSHV910.MAHV = HOCVIEN.MAHV
+    GROUP BY
+      HOCVIEN.MALOP,
+      HOCVIEN.HO,
+      HOCVIEN.TEN,
+      HOCVIEN.MAHV
+  ),
+  MAX910_LOP AS (
+    SELECT
+      MALOP,
+      MAX(SODIEM910) AS MAX_SODIEM910
+    FROM
+      COUNT910_LOP
+    GROUP BY
+      MALOP
+  )
+SELECT
+  HO,
+  TEN
+FROM
+  MAX910_LOP
+  INNER JOIN COUNT910_LOP ON (
+    MAX910_LOP.MALOP = COUNT910_LOP.MALOP
+    AND MAX910_LOP.MAX_SODIEM910 = COUNT910_LOP.SODIEM910
+  );
+
 -- 28. Trong từng học kỳ của từng năm, mỗi giáo viên phân công dạy bao nhiêu môn học, bao nhiêu lớp.
+WITH
+  PHANCONG_MH AS (
+    SELECT
+      HOCKY,
+      NAM,
+      MAGV,
+      COUNT(MAMH) AS SL_MH
+    FROM
+      GIANGDAY
+    GROUP BY
+      HOCKY,
+      NAM,
+      MAGV
+  ),
+  PHANCONG_LOP AS (
+    SELECT
+      HOCKY,
+      NAM,
+      MAGV,
+      COUNT(MALOP) AS SL_MALOP
+    FROM
+      GIANGDAY
+    GROUP BY
+      HOCKY,
+      NAM,
+      MAGV
+  )
+SELECT
+  PHANCONG_MH.HOCKY,
+  PHANCONG_MH.NAM,
+  PHANCONG_MH.MAGV,
+  HOTEN,
+  SL_MH,
+  SL_MALOP
+FROM
+  PHANCONG_MH
+  INNER JOIN PHANCONG_LOP ON (
+    PHANCONG_MH.HOCKY = PHANCONG_LOP.HOCKY
+    AND PHANCONG_MH.NAM = PHANCONG_LOP.NAM
+    AND PHANCONG_MH.MAGV = PHANCONG_LOP.MAGV
+  )
+  INNER JOIN GIAOVIEN ON PHANCONG_MH.MAGV = GIAOVIEN.MAGV;
+
 -- 29. Trong từng học kỳ của từng năm, tìm giáo viên (mã giáo viên, họ tên) giảng dạy nhiều nhất.
+WITH
+  PHANCONG_LOP AS (
+    SELECT
+      HOCKY,
+      NAM,
+      MAGV,
+      COUNT(MALOP) AS SL_MALOP
+    FROM
+      GIANGDAY
+    GROUP BY
+      HOCKY,
+      NAM,
+      MAGV
+  ),
+  MAX_PHANCONG_LOP AS (
+    SELECT
+      HOCKY,
+      NAM,
+      MAX(SL_MALOP) AS MAX_SL_MALOP
+    FROM
+      PHANCONG_LOP
+    GROUP BY
+      HOCKY,
+      NAM
+  )
+SELECT
+  PHANCONG_LOP.HOCKY,
+  PHANCONG_LOP.NAM,
+  GIAOVIEN.MAGV,
+  GIAOVIEN.HOTEN
+FROM
+  PHANCONG_LOP
+  INNER JOIN MAX_PHANCONG_LOP ON (
+    PHANCONG_LOP.HOCKY = MAX_PHANCONG_LOP.HOCKY
+    AND PHANCONG_LOP.NAM = MAX_PHANCONG_LOP.NAM
+    AND PHANCONG_LOP.SL_MALOP = MAX_PHANCONG_LOP.MAX_SL_MALOP
+  )
+  INNER JOIN GIAOVIEN ON PHANCONG_LOP.MAGV = GIAOVIEN.MAGV;
+
 -- 30. Tìm môn học (mã môn học, tên môn học) có nhiều học viên thi không đạt (ở lần thi thứ 1) nhất.
 -- 31. Tìm học viên (mã học viên, họ tên) thi môn nào cũng đạt (chỉ xét lần thi thứ 1).
 -- 32. * Tìm học viên (mã học viên, họ tên) thi môn nào cũng đạt (chỉ xét lần thi sau cùng).
