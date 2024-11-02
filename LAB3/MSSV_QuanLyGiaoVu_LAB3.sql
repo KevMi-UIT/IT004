@@ -33,18 +33,29 @@ GROUP BY
 
 -- 22. Mỗi môn học thống kê số lượng học viên theo kết quả (đạt và không đạt).
 WITH
-  FINALKQ AS (
+  KQ_NOKQUA AS (
     SELECT
       MAHV,
       MAMH,
-      MAX(LANTHI) AS LANTHICUOI,
-      KQUA
+      MAX(LANTHI) AS LANTHICUOI
     FROM
       KETQUATHI
     GROUP BY
       MAHV,
-      MAMH,
+      MAMH
+  ),
+  FINALKQ AS (
+    SELECT
+      KETQUATHI.MAHV,
+      KETQUATHI.MAMH,
       KQUA
+    FROM
+      KQ_NOKQUA
+      INNER JOIN KETQUATHI ON (
+        KQ_NOKQUA.MAHV = KETQUATHI.MAHV
+        AND KQ_NOKQUA.MAMH = KETQUATHI.MAMH
+        AND KQ_NOKQUA.LANTHICUOI = KETQUATHI.LANTHI
+      )
   ),
   MHKHONGDAT AS (
     SELECT
@@ -114,18 +125,29 @@ WHERE
 
 -- 25. * Tìm họ tên những LOPTRG thi không đạt quá 3 môn (mỗi môn đều thi không đạt ở tất cả các lần thi).
 WITH
-  FINALKQ AS (
+  KQ_NOKQUA AS (
     SELECT
       MAHV,
       MAMH,
-      MAX(LANTHI) AS LANTHICUOI,
-      KQUA
+      MAX(LANTHI) AS LANTHICUOI
     FROM
       KETQUATHI
     GROUP BY
       MAHV,
-      MAMH,
+      MAMH
+  ),
+  FINALKQ AS (
+    SELECT
+      KETQUATHI.MAHV,
+      KETQUATHI.MAMH,
       KQUA
+    FROM
+      KQ_NOKQUA
+      INNER JOIN KETQUATHI ON (
+        KQ_NOKQUA.MAHV = KETQUATHI.MAHV
+        AND KQ_NOKQUA.MAMH = KETQUATHI.MAMH
+        AND KQ_NOKQUA.LANTHICUOI = KETQUATHI.LANTHI
+      )
   ),
   DSLOPTRG AS (
     SELECT
@@ -304,8 +326,204 @@ FROM
   INNER JOIN GIAOVIEN ON PHANCONG_LOP.MAGV = GIAOVIEN.MAGV;
 
 -- 30. Tìm môn học (mã môn học, tên môn học) có nhiều học viên thi không đạt (ở lần thi thứ 1) nhất.
+WITH
+  KQTHIKD AS (
+    SELECT
+      MAMH,
+      COUNT(MAHV) AS SOHV
+    FROM
+      KETQUATHI
+    WHERE
+      KQUA = 'Khong Dat'
+      AND LANTHI = '1'
+    GROUP BY
+      MAMH
+  )
+SELECT
+  TOP (1)
+WITH
+  TIES MONHOC.MAMH,
+  TENMH
+FROM
+  KQTHIKD
+  INNER JOIN MONHOC ON KQTHIKD.MAMH = MONHOC.MAMH
+ORDER BY
+  SOHV DESC;
+
 -- 31. Tìm học viên (mã học viên, họ tên) thi môn nào cũng đạt (chỉ xét lần thi thứ 1).
+WITH
+  KQLANTHI1 AS (
+    SELECT
+      *
+    FROM
+      KETQUATHI
+    WHERE
+      LANTHI = '1'
+  )
+SELECT DISTINCT
+  HOCVIEN.MAHV,
+  HO,
+  TEN
+FROM
+  KETQUATHI
+  INNER JOIN HOCVIEN ON KETQUATHI.MAHV = HOCVIEN.MAHV
+WHERE
+  HOCVIEN.MAHV NOT IN (
+    SELECT
+      MAHV
+    FROM
+      KQLANTHI1
+    WHERE
+      KQUA = 'Khong Dat'
+  );
+
 -- 32. * Tìm học viên (mã học viên, họ tên) thi môn nào cũng đạt (chỉ xét lần thi sau cùng).
+WITH
+  KQ_NOKQUA AS (
+    SELECT
+      MAHV,
+      MAMH,
+      MAX(LANTHI) AS LANTHICUOI
+    FROM
+      KETQUATHI
+    GROUP BY
+      MAHV,
+      MAMH
+  ),
+  FINALKQ AS (
+    SELECT
+      KETQUATHI.MAHV,
+      KETQUATHI.MAMH,
+      KQUA
+    FROM
+      KQ_NOKQUA
+      INNER JOIN KETQUATHI ON (
+        KQ_NOKQUA.MAHV = KETQUATHI.MAHV
+        AND KQ_NOKQUA.MAMH = KETQUATHI.MAMH
+        AND KQ_NOKQUA.LANTHICUOI = KETQUATHI.LANTHI
+      )
+  )
+SELECT DISTINCT
+  HOCVIEN.MAHV,
+  HO,
+  TEN
+FROM
+  KETQUATHI
+  INNER JOIN HOCVIEN ON KETQUATHI.MAHV = HOCVIEN.MAHV
+WHERE
+  HOCVIEN.MAHV NOT IN (
+    SELECT
+      MAHV
+    FROM
+      FINALKQ
+    WHERE
+      KQUA = 'Khong Dat'
+  );
+
 -- 33. * Tìm học viên (mã học viên, họ tên) đã thi tất cả các môn đều đạt (chỉ xét lần thi thứ 1).
+WITH
+  KQLANTHI1 AS (
+    SELECT
+      *
+    FROM
+      KETQUATHI
+    WHERE
+      LANTHI = '1'
+      AND KQUA = 'Dat'
+  )
+SELECT
+  HOCVIEN.MAHV,
+  HO + ' ' + TEN AS HOTEN
+FROM
+  KQLANTHI1 AS KQLANTHI1_1
+  INNER JOIN HOCVIEN ON KQLANTHI1_1.MAHV = HOCVIEN.MAHV
+WHERE
+  NOT EXISTS (
+    SELECT
+      *
+    FROM
+      MONHOC
+    WHERE
+      NOT EXISTS (
+        SELECT
+          *
+        FROM
+          KQLANTHI1 AS KQLANTHI1_2
+        WHERE
+          KQLANTHI1_1.MAHV = KQLANTHI1_2.MAHV
+          AND MONHOC.MAMH = KQLANTHI1_2.MAMH
+      )
+  );
+
 -- 34. * Tìm học viên (mã học viên, họ tên) đã thi tất cả các môn đều đạt (chỉ xét lần thi sau cùng).
+WITH
+  KQ_NOKQUA AS (
+    SELECT
+      MAHV,
+      MAMH,
+      MAX(LANTHI) AS LANTHICUOI
+    FROM
+      KETQUATHI
+    GROUP BY
+      MAHV,
+      MAMH
+  ),
+  FINALKQ AS (
+    SELECT
+      KETQUATHI.MAHV,
+      KETQUATHI.MAMH,
+      KQUA
+    FROM
+      KQ_NOKQUA
+      INNER JOIN KETQUATHI ON (
+        KQ_NOKQUA.MAHV = KETQUATHI.MAHV
+        AND KQ_NOKQUA.MAMH = KETQUATHI.MAMH
+        AND KQ_NOKQUA.LANTHICUOI = KETQUATHI.LANTHI
+      )
+  )
+SELECT
+  HOCVIEN.MAHV,
+  HO + ' ' + TEN AS HOTEN
+FROM
+  FINALKQ AS FINALKQ_1
+  INNER JOIN HOCVIEN ON FINALKQ_1.MAHV = HOCVIEN.MAHV
+WHERE
+  NOT EXISTS (
+    SELECT
+      *
+    FROM
+      MONHOC
+    WHERE
+      NOT EXISTS (
+        SELECT
+          *
+        FROM
+          FINALKQ AS FINALKQ_2
+        WHERE
+          FINALKQ_1.MAHV = FINALKQ_2.MAHV
+          AND MONHOC.MAMH = FINALKQ_2.MAMH
+      )
+  );
+
 -- 35. ** Tìm học viên (mã học viên, họ tên) có điểm thi cao nhất trong từng môn (lấy điểm ở lần thi sau cùng).
+WITH
+  MAXDIEM AS (
+    SELECT
+      MAMH,
+      MAX(DIEM) DIEMMAX
+    FROM
+      KETQUATHI
+    GROUP BY
+      MAMH
+  )
+SELECT
+  HOCVIEN.MAHV,
+  HO + ' ' + TEN AS HOTEN,
+  KETQUATHI.MAMH
+FROM
+  MAXDIEM
+  INNER JOIN KETQUATHI ON (
+    MAXDIEM.MAMH = KETQUATHI.MAMH
+    AND MAXDIEM.DIEMMAX = KETQUATHI.DIEM
+  )
+  INNER JOIN HOCVIEN ON KETQUATHI.MAHV = HOCVIEN.MAHV;
