@@ -296,14 +296,14 @@ FROM
 
 -- Q27: Cho biết SLGV và tổng lương của họ
 SELECT
-  count(*) AS SLGV,
+  COUNT(*) AS SLGV,
   SUM(LUONG) AS TongLuong
 FROM
   GIAOVIEN;
 
 -- Q28: Cho biết SLGV và lương TB của từng bộ môn
 SELECT
-  count(*) AS SLGV,
+  COUNT(*) AS SLGV,
   AVG(LUONG) AS LuongTB
 FROM
   GIAOVIEN
@@ -313,7 +313,7 @@ GROUP BY
 -- Q29: Cho biết tên chủ đề và số lượng đề tài thuộc về chủ đề đó
 SELECT
   CD.TENCD,
-  count(*) AS SLDT
+  COUNT(*) AS SLDT
 FROM
   CHUDE CD
   JOIN DETAI DT ON CD.MACD = DT.MACD
@@ -324,7 +324,7 @@ GROUP BY
 -- Q30: Cho biết tên giáo viên và số lượng đề tài giáo viên đó tham gia
 SELECT
   GV.HOTEN,
-  count(DISTINCT TGDT.MADT) AS SLDTTG
+  COUNT(DISTINCT TGDT.MADT) AS SLDTTG
 FROM
   GIAOVIEN GV
   JOIN THAMGIADT TGDT ON GV.MAGV = TGDT.MAGV
@@ -335,7 +335,7 @@ GROUP BY
 -- Q31: Cho biết tên giáo viên và số lượng đề tài mà giáo viên đó làm chủ nhiệm
 SELECT
   GV.HOTEN,
-  count(*) AS SLDTCN
+  COUNT(*) AS SLDTCN
 FROM
   GIAOVIEN GV
   JOIN DETAI DT ON GV.MAGV = DT.GVCNDT
@@ -346,7 +346,7 @@ GROUP BY
 -- Q32: Với mỗi giáo viên, cho tên giáo viên và số người thân của giáo viên đó
 SELECT
   GV.HOTEN,
-  count(NT.TEN) AS SO_NGUOI_THAN
+  COUNT(NT.TEN) AS SO_NGUOI_THAN
 FROM
   GIAOVIEN GV
   LEFT JOIN NGUOITHAN NT ON GV.MAGV = NT.MAGV
@@ -364,11 +364,11 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(DISTINCT TGDT.MADT) >= 3;
+  COUNT(DISTINCT TGDT.MADT) >= 3;
 
 -- Q34: Cho biết số lượng giáo viên đã tham gia vào đề tài Ứng dụng hóa học xanh
 SELECT
-  count(DISTINCT TGDT.MAGV) AS SLGV_THAMGIA_UDHHX
+  COUNT(DISTINCT TGDT.MAGV) AS SLGV_THAMGIA_UDHHX
 FROM
   DETAI DT
   JOIN THAMGIADT TGDT ON DT.MADT = TGDT.MADT
@@ -457,10 +457,18 @@ WHERE
       MABM = 'HTTT'
   );
 
+-- C3
+SELECT
+  MAX(LUONG)
+FROM
+  GIAOVIEN
+WHERE
+  MABM = 'HTTT';
+
 -- Q38: Cho biết tên giáo viên lớn tuổi nhất của bộ môn Hệ thống thông tin
 --C1
 SELECT
-  top 1 GV.HOTEN AS GV_GIA_NHAT
+  TOP 1 GV.HOTEN AS GV_GIA_NHAT
 FROM
   GIAOVIEN GV
   JOIN BOMON BM ON GV.MABM = BM.MABM
@@ -502,7 +510,7 @@ WHERE
 -- Q39: Cho biết tên giáo viên nhỏ tuổi nhất khoa CNTT
 --C1
 SELECT
-  top 1 GV.HOTEN AS GV_GIA_NHAT
+  TOP 1 GV.HOTEN AS GV_GIA_NHAT
 FROM
   GIAOVIEN GV
   JOIN BOMON BM ON GV.MABM = BM.MABM
@@ -616,8 +624,7 @@ WHERE
       )
   );
 
--- Q43: Cho biết những đề tài mà giáo viên Nguyễn Hoài An chưa tham gia.
---      Xuất ra tên đề tài và tên người chủ nhiệm đề tài
+-- Q43: Cho biết những đề tài mà giáo viên Nguyễn Hoài An chưa tham gia. Xuất ra tên đề tài và tên người chủ nhiệm đề tài
 SELECT
   TENDT,
   HOTEN AS GVCNDT
@@ -768,9 +775,9 @@ GROUP BY
   K.TENKHOA,
   K.MAKHOA
 HAVING
-  count(*) >= ALL (
+  COUNT(*) >= ALL (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN GV
       JOIN BOMON BM ON GV.MABM = BM.MABM
@@ -794,9 +801,9 @@ WHERE
     GROUP BY
       GVCNDT
     HAVING
-      count(*) >= ALL (
+      COUNT(*) >= ALL (
         SELECT
-          count(*)
+          COUNT(*)
         FROM
           DETAI
         GROUP BY
@@ -812,9 +819,9 @@ FROM
 GROUP BY
   MABM
 HAVING
-  count(*) >= ALL (
+  COUNT(*) >= ALL (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN
     GROUP BY
@@ -837,9 +844,9 @@ WHERE
     GROUP BY
       MAGV
     HAVING
-      count(DISTINCT MADT) >= ALL (
+      COUNT(DISTINCT MADT) >= ALL (
         SELECT
-          count(DISTINCT MADT)
+          COUNT(DISTINCT MADT)
         FROM
           THAMGIADT
         GROUP BY
@@ -864,9 +871,9 @@ WHERE
     GROUP BY
       GV.MAGV
     HAVING
-      count(DISTINCT MADT) >= ALL (
+      COUNT(DISTINCT MADT) >= ALL (
         SELECT
-          count(DISTINCT MADT)
+          COUNT(DISTINCT MADT)
         FROM
           GIAOVIEN GV
           JOIN THAMGIADT TGDT ON GV.MAGV = TGDT.MAGV
@@ -893,9 +900,9 @@ WHERE
     GROUP BY
       MAGV
     HAVING
-      count(*) >= ALL (
+      COUNT(*) >= ALL (
         SELECT
-          count(*)
+          COUNT(*)
         FROM
           NGUOITHAN
         GROUP BY
@@ -914,9 +921,9 @@ GROUP BY
   DETAI.GVCNDT,
   GIAOVIEN.HOTEN
 HAVING
-  count(*) >= ALL (
+  COUNT(*) >= ALL (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       BOMON
       LEFT JOIN GIAOVIEN ON BOMON.MABM = GIAOVIEN.MABM
@@ -973,7 +980,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT
   GV.HOTEN
 FROM
@@ -984,9 +991,9 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(DISTINCT MACD) = (
+  COUNT(DISTINCT MACD) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       CHUDE
   );
@@ -1042,7 +1049,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   DT.TENDT
 FROM
@@ -1060,9 +1067,9 @@ GROUP BY
   DT.MADT,
   DT.TENDT
 HAVING
-  count(DISTINCT TGDT.MAGV) = (
+  COUNT(DISTINCT TGDT.MAGV) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN
     WHERE
@@ -1123,7 +1130,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   DT.TENDT
 FROM
@@ -1142,9 +1149,9 @@ GROUP BY
   DT.MADT,
   DT.TENDT
 HAVING
-  count(DISTINCT TGDT.MAGV) = (
+  COUNT(DISTINCT TGDT.MAGV) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN GV1
       JOIN BOMON BM1 ON GV1.MABM = BM1.MABM
@@ -1201,7 +1208,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT
   TGDT.MAGV
 FROM
@@ -1211,9 +1218,9 @@ FROM
 GROUP BY
   (MAGV)
 HAVING
-  count(DISTINCT DT.MADT) = (
+  COUNT(DISTINCT DT.MADT) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       DETAI
     WHERE
@@ -1283,7 +1290,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   GV.HOTEN
 FROM
@@ -1303,9 +1310,9 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(DISTINCT TGDT.MADT) = (
+  COUNT(DISTINCT TGDT.MADT) = (
     SELECT
-      count(DISTINCT MADT)
+      COUNT(DISTINCT MADT)
     FROM
       THAMGIADT TGDT2
       JOIN GIAOVIEN GV2 ON GV2.MAGV = TGDT2.MAGV
@@ -1366,7 +1373,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   DT.TENDT
 FROM
@@ -1385,9 +1392,9 @@ GROUP BY
   DT.MADT,
   DT.TENDT
 HAVING
-  count(DISTINCT TGDT.MAGV) = (
+  COUNT(DISTINCT TGDT.MAGV) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN GV1
       JOIN BOMON BM1 ON GV1.MABM = BM1.MABM
@@ -1448,7 +1455,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   GV.HOTEN
 FROM
@@ -1460,9 +1467,9 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(*) = (
+  COUNT(*) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       CONGVIEC
     WHERE
@@ -1539,7 +1546,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT
   TGDT.MAGV
 FROM
@@ -1556,9 +1563,9 @@ FROM
 GROUP BY
   (MAGV)
 HAVING
-  count(DISTINCT DT.MADT) = (
+  COUNT(DISTINCT DT.MADT) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       DETAI
     WHERE
@@ -1655,7 +1662,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   GV.HOTEN
 FROM
@@ -1682,9 +1689,9 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(DISTINCT TGDT.MADT) = (
+  COUNT(DISTINCT TGDT.MADT) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       DETAI
     WHERE
@@ -1752,7 +1759,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   DT.TENDT
 FROM
@@ -1771,9 +1778,9 @@ GROUP BY
   DT.MADT,
   DT.TENDT
 HAVING
-  count(DISTINCT TGDT.MAGV) = (
+  COUNT(DISTINCT TGDT.MAGV) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN GV
       JOIN BOMON BM ON GV.MABM = BM.MABM
@@ -1862,7 +1869,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   GV.HOTEN
 FROM
@@ -1881,9 +1888,9 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(*) = (
+  COUNT(*) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       CONGVIEC
     WHERE
@@ -1954,7 +1961,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   HOTEN
 FROM
@@ -1974,9 +1981,9 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(DISTINCT TGDT.MADT) = (
+  COUNT(DISTINCT TGDT.MADT) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       DETAI
     WHERE
@@ -2058,7 +2065,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   DT.TENDT
 FROM
@@ -2084,9 +2091,9 @@ GROUP BY
   DT.MADT,
   DT.TENDT
 HAVING
-  count(DISTINCT TGDT.MAGV) = (
+  COUNT(DISTINCT TGDT.MAGV) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN GV
       JOIN BOMON BM ON GV.MABM = BM.MABM
@@ -2172,7 +2179,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT DISTINCT
   GV.MAGV,
   GV.HOTEN,
@@ -2193,9 +2200,9 @@ GROUP BY
   GV.MAGV,
   GV.HOTEN
 HAVING
-  count(*) = (
+  COUNT(*) = (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       CONGVIEC
     WHERE
@@ -2315,7 +2322,7 @@ WHERE
       )
   );
 
--- C3: dùng count
+-- C3: dùng COUNT
 SELECT
   MAGV,
   HOTEN,
@@ -2349,9 +2356,9 @@ WHERE
     GROUP BY
       (MAGV)
     HAVING
-      count(DISTINCT DT.MADT) = (
+      COUNT(DISTINCT DT.MADT) = (
         SELECT
-          count(*)
+          COUNT(*)
         FROM
           DETAI
         WHERE
@@ -2449,9 +2456,9 @@ WHERE
           GROUP BY
             (b.TRUONGBM)
           HAVING
-            count(g.MAGV) >= ALL (
+            COUNT(g.MAGV) >= ALL (
               SELECT
-                count(g.magv)
+                COUNT(g.magv)
               FROM
                 BOMON b
                 JOIN KHOA k ON b.MAKHOA = k.MAKHOA
@@ -2463,8 +2470,9 @@ WHERE
             )
         )
     )
-  )
-  -- Q75: Cho biết họ tên giáo viên và tên bộ môn họ làm trường bộ môn nếu có
+  );
+
+-- Q75: Cho biết họ tên giáo viên và tên bộ môn họ làm trường bộ môn nếu có
 SELECT
   GV.HOTEN,
   (
@@ -2516,8 +2524,7 @@ FROM
   GIAOVIEN GV
   LEFT JOIN DETAI DT ON GVCNDT = MAGV;
 
--- Q78. Xuất ra thông tin của giáo viên (MAGV, HOTEN) và mức lương của giáo viên. 
---      Mức lương được xếp theo quy tắc: Lương của giáo viên < $1800 : “THẤP” ; Từ $1800 đến $2200: TRUNG BÌNH; Lương > $2200: “CAO"
+-- Q78. Xuất ra thông tin của giáo viên (MAGV, HOTEN) và mức lương của giáo viên. Mức lương được xếp theo quy tắc: Lương của giáo viên < $1800 : “THẤP” ; Từ $1800 đến $2200: TRUNG BÌNH; Lương > $2200: “CAO"
 SELECT
   MAGV,
   HOTEN,
@@ -2538,7 +2545,7 @@ SELECT
   HOTEN,
   (
     SELECT
-      count(*)
+      COUNT(*)
     FROM
       GIAOVIEN GV2
     WHERE
@@ -2548,8 +2555,7 @@ SELECT
 FROM
   GIAOVIEN GV1;
 
--- Q80. Xuất ra thông tin thu nhập của giáo viên. Thu nhập của giáo viên được tính bằng 
---      LƯƠNG + PHỤ CẤP. Nếu giáo viên là trưởng bộ môn thì PHỤ CẤP là 300, và giáo viên là trưởng khoa thì PHỤ CẤP là 600.
+-- Q80. Xuất ra thông tin thu nhập của giáo viên. Thu nhập của giáo viên được tính bằng LƯƠNG + PHỤ CẤP. Nếu giáo viên là trưởng bộ môn thì PHỤ CẤP là 300, và giáo viên là trưởng khoa thì PHỤ CẤP là 600.
 SELECT
   MAGV,
   HOTEN,
