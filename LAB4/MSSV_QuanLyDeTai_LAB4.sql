@@ -30,7 +30,7 @@ FROM
   GIAOVIEN GV
   JOIN BOMON BM ON BM.TRUONGBM = GV.MAGV
 WHERE
-  YEAR (BM.NGAYNHANCHUC) > 1995;
+  YEAR(BM.NGNHANCHUC) > 1995;
 
 -- Q4: Cho biết tên những giáo viên khoa công nghệ thông tin
 SELECT
@@ -167,8 +167,8 @@ FROM
   JOIN DETAI DT ON CV.MADT = DT.MADT
 WHERE
   DT.TENDT = N'HTTT quản lý các trường ĐH'
-  AND MONTH (CV.NGAYBD) = 3
-  AND YEAR (CV.NGAYBD) = 2008;
+  AND MONTH(CV.NGAYBD) = 3
+  AND YEAR(CV.NGAYBD) = 2008;
 
 -- Q16: Cho biết tên giáo viên và tên người quản lý chuyên môn của giáo viên đó
 SELECT
@@ -475,7 +475,7 @@ FROM
 WHERE
   BM.TENBM = N'Hệ thống thông tin'
 ORDER BY
-  GV.NGAYSINH;
+  GV.NGSINH;
 
 --C2
 SELECT
@@ -497,9 +497,9 @@ FROM
       )
   ) AS GV
 WHERE
-  GV.NGAYSINH = (
+  GV.NGSINH = (
     SELECT
-      MIN((GV2.NGAYSINH))
+      MIN((GV2.NGSINH))
     FROM
       GIAOVIEN GV2
       JOIN BOMON BM ON GV2.MABM = BM.MABM
@@ -624,6 +624,43 @@ WHERE
       )
   );
 
+---Cách 2
+SELECT
+  TENDT,
+  DT.MADT
+FROM
+  DETAI DT
+  LEFT JOIN THAMGIADT TG ON DT.MADT = TG.MADT
+EXCEPT
+SELECT
+  TENDT,
+  DT.MADT
+FROM
+  THAMGIADT TG,
+  DETAI DT,
+  GIAOVIEN GV
+WHERE
+  TG.MADT = DT.MADT
+  AND TG.MAGV = GV.MAGV
+  AND GV.HOTEN = N'Nguyễn Hoài An'
+  ---CACH 3
+SELECT DISTINCT
+  DT.TENDT
+FROM
+  DETAI DT
+  LEFT JOIN THAMGIADT TG ON TG.MADT = DT.MADT
+WHERE
+  TG.MAGV IS NULL
+  OR NOT EXISTS (
+    SELECT
+      *
+    FROM
+      GIAOVIEN GV02
+    WHERE
+      GV02.MAGV = TG.MAGV
+      AND GV02.HOTEN = N'Nguyễn Hoài An'
+  );
+
 -- Q43: Cho biết những đề tài mà giáo viên Nguyễn Hoài An chưa tham gia. Xuất ra tên đề tài và tên người chủ nhiệm đề tài
 SELECT
   TENDT,
@@ -725,7 +762,18 @@ WHERE
       AND GV1.MAGV != GV2.MAGV
   );
 
--- Q49: Tìm những giáo viên có lương lớn hơn lương của ít nhất một giáo viên bộ môn "Công nghệ phần mềm"
+--CACH 2
+SELECT
+  *
+FROM
+  GIAOVIEN GV1,
+  GIAOVIEN GV2
+WHERE
+  GV1.HOTEN = GV2.HOTEN
+  AND GV1.PHAI = GV2.PHAI
+  AND GV1.MABM = GV2.MABM
+  AND GV1.MAGV <> GV2.MAGV
+  -- Q49: Tìm những giáo viên có lương lớn hơn lương của ít nhất một giáo viên bộ môn "Công nghệ phần mềm"
 SELECT
   MAGV,
   HOTEN,
@@ -1451,7 +1499,7 @@ WHERE
         WHERE
           TGDT1.MAGV = TGDT.MAGV
           AND TGDT1.MADT = '006'
-          AND TGDT1.SOTT = CV1.SOTT
+          AND TGDT1.STT = CV1.SOTT
       )
   );
 
@@ -1476,8 +1524,36 @@ HAVING
       MADT = '006'
   );
 
--- Q65: Cho biết các giáo viên nào đã tham gia tất cả các đề tài của chủ đề Ứng dụng công nghệ
--- C1: dùng except
+---CACH KHAC - ON TAP
+-- Q64: Cho biết tên giáo viên nào mà tham gia tất cả các công việc của đề tài 006
+SELECT
+  *
+FROM
+  GIAOVIEN GV
+WHERE
+  NOT EXISTS (
+    SELECT
+      *
+    FROM
+      CONGVIEC CV
+    WHERE
+      MADT = '006'
+      AND NOT EXISTS ( --
+        SELECT
+          *
+        FROM
+          THAMGIADT TG
+        WHERE
+          TG.MADT = CV.MADT
+          AND TG.STT = CV.SOTT
+          AND TG.MAGV = GV.MAGV
+      )
+  ) ---TIM TAT CA GIAO VIEN THAM GIA DETAI 006
+  ----VÍ DỤ: TÌM GIÁO VIÊN THAM GIA TẤT CẢ ĐỀ TÀI 
+  ---~ ỨNG VỚI MỖI GIÁO VIÊN: KHÔNG TỒN TẠI ĐỀ TÀI NÀO MÀ GV ĐÓ KO THAM GIA ~ TÌM TẤT CẢ ĐỀ TÀI GV ĐÓ KO THAM GIA
+  ----						ỨNG VỚI MỖI ĐỀ TÀI: KHÔNG TỒN TẠI SỰ THAM GIA CỦA GV ĐÓ 
+  -- Q65: Cho biết các giáo viên nào đã tham gia tất cả các đề tài của chủ đề Ứng dụng công nghệ
+  -- C1: dùng except
 SELECT DISTINCT
   TGDT.MAGV
 FROM
@@ -1705,8 +1781,35 @@ HAVING
       )
   );
 
--- Q67: Cho biết tên đề tài nào mà được tất cả các giáo viên của khoa CNTT tham gia
--- C1: dùng except 
+-- Q66: Cho biết tên giáo viên nào đã tham gia tất cả các đề tài do Trần Trà Hương làm chủ nhiệm
+--- ỨNG VỚI MỖI GIÁO VIÊN, KHÔNG TỒN TẠI ĐỀ TÀI NÀO DO TTH LÀM CHỦ NHIỆM, MÀ GV ĐÓ KO THAM GIA
+---ỨNG VỚI MỖI ĐỀ TÀI DO TTH LÀM CHỦ NHIỆM, KHÔNG TỒN TẠI SỰ THAM GIA CỦA GV ĐÓ
+SELECT
+  *
+FROM
+  GIAOVIEN GV01
+WHERE
+  NOT EXISTS (
+    SELECT
+      *
+    FROM
+      DETAI DT,
+      GIAOVIEN GV02
+    WHERE
+      DT.GVCNDT = GV02.MAGV
+      AND GV02.HOTEN = N'Trần Trà Hương'
+      AND NOT EXISTS (
+        SELECT
+          *
+        FROM
+          THAMGIADT TG
+        WHERE
+          GV01.MAGV = TG.MAGV
+          AND DT.MADT = TG.MADT
+      )
+  )
+  -- Q67: Cho biết tên đề tài nào mà được tất cả các giáo viên của khoa CNTT tham gia
+  -- C1: dùng except 
 SELECT DISTINCT
   DT.TENDT
 FROM
@@ -1865,7 +1968,7 @@ WHERE
         WHERE
           TGDT1.MAGV = TGDT.MAGV
           AND TGDT1.MADT = CV1.MADT
-          AND TGDT1.SOTT = CV1.SOTT
+          AND TGDT1.STT = CV1.SOTT
       )
   );
 
@@ -2065,7 +2168,57 @@ WHERE
       )
   );
 
--- C3: dùng COUNT
+-- c2.2	: not exists -- KO TON TAI DE TAI NAO MA KHONG DUOC THAM GIA BOI TAT CA GV KHOA SINH HOC 
+-- Q70: Cho biết tên đề tài nào nào mà được tất cả các giáo viên của khoa Sinh học tham gia
+SELECT
+  *
+FROM
+  DETAI DT
+WHERE
+  NOT EXISTS (
+    SELECT
+      *
+    FROM
+      GIAOVIEN GV
+      INNER JOIN BOMON BM ON GV.MABM = BM.MABM
+      INNER JOIN KHOA K ON BM.MAKHOA = K.MAKHOA
+    WHERE
+      K.TENKHOA = N'Sinh học'
+      AND NOT EXISTS (
+        SELECT
+          *
+        FROM
+          THAMGIADT TG
+        WHERE
+          GV.MAGV = TG.MAGV
+          AND DT.MADT = TG.MADT
+      )
+  )
+SELECT
+  *
+FROM
+  DETAI DT
+WHERE
+  NOT EXISTS (
+    SELECT
+      *
+    FROM
+      GIAOVIEN GV
+      INNER JOIN BOMON BM ON GV.MABM = BM.MABM
+      INNER JOIN KHOA K ON BM.MAKHOA = K.MAKHOA
+    WHERE
+      NOT EXISTS (
+        SELECT
+          *
+        FROM
+          THAMGIADT TG
+        WHERE
+          GV.MAGV = TG.MAGV
+          AND DT.MADT = TG.MADT
+          AND K.TENKHOA = N'Sinh học'
+      )
+  )
+  -- C3: dùng COUNT
 SELECT DISTINCT
   DT.TENDT
 FROM
@@ -2597,8 +2750,8 @@ SELECT
   HOTEN,
   (
     CASE PHAI
-      WHEN 'Nam' THEN YEAR (NGAYSINH) + 60
-      WHEN N'Nữ' THEN YEAR (NGAYSINH) + 55
+      WHEN 'Nam' THEN YEAR(NGSINH) + 60
+      WHEN N'Nữ' THEN YEAR(NGSINH) + 55
     END
   ) AS NAMNGHIHUU_DUKIEN
 FROM
@@ -2614,9 +2767,120 @@ FROM
   LEFT JOIN GIAOVIEN GV2 ON GV1.GVQLCM = GV2.MAGV;
 
 -- 3. RÀNG BUỘC TOÀN VẸN
--- R1. Tên tài phải duy nhất 
+-- R1. Tên tài phải duy nhất
+ALTER TABLE DETAI
+ADD UNIQUE (TENDT);
+
+GO;
+
 -- R2. Trưởng bộ môn phải sinh sau trước 1975
+--            THEM         XOA            SUA
+-- BOMON      +            -              +(TRUONGBM)
+-- GIAOVIEN   -            -              +(NGSINH)
+CREATE
+TRIGGER TRG_TRUONGBM_1975_BOMON_THEM_SUA ON BOMON FOR
+INSERT
+,
+UPDATE AS BEGIN IF EXISTS (
+  SELECT
+    *
+  FROM
+    inserted
+  WHERE
+    TRUONGBM IS NULL
+) RETURN DECLARE @TRUONGBM CHAR(3)
+SELECT
+  @TRUONGBM = TRUONGBM
+FROM
+  inserted IF EXISTS (
+    SELECT
+      *
+    FROM
+      GIAOVIEN
+    WHERE
+      MAGV = @TRUONGBM
+      AND YEAR(NGSINH) > 1975
+  ) BEGIN RAISERROR (N'NGSINH cua truong bo mon phai <= 1975', 16, 1) ROLLBACK TRANSACTION END END;
+
+GO;
+
+CREATE
+TRIGGER TRG_TRUONGBM_1975_GIAOVIEN_SUA ON GIAOVIEN FOR
+UPDATE AS BEGIN IF EXISTS (
+  SELECT
+    *
+  FROM
+    inserted
+    INNER JOIN BOMON ON inserted.MAGV = BOMON.TRUONGBM
+  WHERE
+    YEAR(inserted.NGSINH) > 1975
+) BEGIN RAISERROR (N'NGSINH cua truong bo mon phai <= 1975', 16, 1) ROLLBACK TRANSACTION END END;
+
+GO;
+
 -- R3. Một bộ môn có tối thiểu 1 giáo viên nữ
+--			  THEM       XOA               SUA
+-- BOMON      +          -                 -
+-- GIAOVIEN   -          +                 +(PHAI, MABM)
+CREATE
+TRIGGER TRG_BOMON_1_GVNU_BOMON ON BOMON FOR
+INSERT
+  AS BEGIN IF NOT EXISTS (
+    SELECT
+      *
+    FROM
+      inserted
+      INNER JOIN GIAOVIEN ON inserted.TRUONGBM = GIAOVIEN.MABM
+    WHERE
+      GIAOVIEN.PHAI = N'Nữ'
+  ) BEGIN RAISERROR (N'Phai them truong bo mon nu vao!', 16, 1) ROLLBACK TRANSACTION END END;
+
+GO;
+
+CREATE
+TRIGGER TRG_BOMON_1_GVNU_GIAOVIEN_XOA ON GIAOVIEN FOR
+DELETE AS BEGIN DECLARE @MABM CHAR(4)
+SELECT
+  @MABM = MABM
+FROM
+  deleted IF (
+    SELECT
+      COUNT(*)
+    FROM
+      GIAOVIEN
+    WHERE
+      MABM = @MABM
+      AND PHAI = N'Nữ'
+  ) < 1 BEGIN RAISERROR (
+    'Khong duoc xoa giao vien vi do la giao vien nu duy nhat',
+    16,
+    1
+  ) ROLLBACK TRANSACTION END END;
+
+GO;
+
+CREATE
+TRIGGER TRG_BOMON_1_GVNU_GIAOVIEN_SUA ON GIAOVIEN FOR
+UPDATE AS BEGIN DECLARE @MABM CHAR(4)
+SELECT
+  @MABM = MABM
+FROM
+  deleted IF (
+    SELECT
+      COUNT(*)
+    FROM
+      GIAOVIEN
+    WHERE
+      MABM = @MABM
+      AND PHAI = N'Nữ'
+  ) < 1 BEGIN RAISERROR (
+    'Khong duoc doi MABM / sua phai giao vien vi do la giao vien nu duy nhat',
+    16,
+    1
+  ) ROLLBACK TRANSACTION END END;
+
+GO;
+
 -- R4. Một giáo viên phải có ít nhất 1 số điện thoại
 -- R5. Một giáo viên có tối đa 3 số điện thoại
 -- R6. Một bộ môn phải có tối thiểu 4 giáo viên
@@ -2627,6 +2891,28 @@ FROM
 -- R11. Giáo viên là Nam thì chỉ có vợ chồng là Nữ hoặc ngược lại.
 -- R12. Nếu thân nhân có quan hệ là “con gái” hoặc “con trai” với giáo viên thì năm sinh của giáo viên phải nhỏ hơn năm sinh của thân nhân.
 -- R13. Một giáo viên chỉ làm chủ nhiệm tối đa 3 đề tài.
+---				THEM	XOA		SUA
+--GIAOVIEN		-		-       -*	
+--DETAI         +       -       +(MAGVDT)
+GO;
+
+CREATE
+TRIGGER TRG_GIAOVIEN_MAX_3_DE_TAI_DETAI_THEM ON DETAI FOR
+INSERT
+,
+UPDATE AS BEGIN DECLARE @MADT CHAR(3)
+SELECT
+  @MADT = MADT
+FROM
+  inserted IF (
+    SELECT
+      COUNT(*)
+    FROM
+      DETAI
+    WHERE
+      MADT = @MADT
+  ) > 3 BEGIN RAISERROR ('Toi da 3 de tai', 16, 1) ROLLBACK TRANSACTION END END;
+
 -- R14. Một đề tài phải có ít nhất một công việc
 -- R15. Lương của giáo viên phải nhỏ hơn lương người quản lý của giáo viên đó.
 -- R16. Lương của trưởng bộ môn phải lớn hơn lương của các giáo viên trong bộ môn.
