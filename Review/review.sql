@@ -17,7 +17,7 @@ CREATE TABLE JOB (
   NAME VARCHAR(40) UNIQUE,
   SALARY MONEY,
   -- OR
-  -- CONTRAINT ... UNIQUE(FIELD_1, FIELD_2)
+  -- CONSTRAINT ... UNIQUE(FIELD_1, FIELD_2)
 );
 
 -- DEFAULT VALUE
@@ -26,6 +26,21 @@ ADD DEFAULT 0 FOR INCOME;
 
 ALTER TABLE PEOPLE
 ALTER COLUMN INCOME DROP DEFAULT;
+
+-- DISABLE CONSTRAINTS
+-- Disable the constraints on a table called tableName:
+ALTER TABLE tableName NOCHECK CONSTRAINT ALL;
+
+-- Re-enable the constraints on a table called tableName:
+ALTER TABLE tableName
+WITH
+  CHECK CHECK CONSTRAINT ALL;
+
+-- Disable constraints for all tables in the database:
+EXEC sp_msforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
+
+-- Re-enable constraints for all tables in the database:
+EXEC sp_msforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL';
 
 -- INSERT VALUES
 SET
